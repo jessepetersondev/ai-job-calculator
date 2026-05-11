@@ -1,0 +1,140 @@
+{% extends "_base.html" %}
+
+{% block title %}The Great Replacement — Will AI Take Your Job?{% endblock %}
+{% block description %}9.3 million US jobs are at risk in the next 2–5 years. Find out exactly how exposed yours is.{% endblock %}
+
+{% block content %}
+<div class="calc-page">
+  <div class="wrap">
+    <nav class="nav">
+      <div class="brand"><span class="dot"></span> THE GREAT REPLACEMENT</div>
+      <a href="/calculator" class="nav-link">Calculate your score →</a>
+    </nav>
+
+    <section class="calc-hero" style="padding-bottom: 40px;">
+      <div class="eyebrow" style="margin-bottom: 24px;">/ AI &amp; AMERICAN JOBS · 2026 ATLAS</div>
+      <h1 class="display">
+        9.3 million US jobs<br>
+        are at risk. <em>Is yours?</em>
+      </h1>
+      <p class="lede" style="margin-top: 28px;">
+        Researchers at Tufts University analyzed every occupation in the United States
+        for AI displacement risk. The results are not evenly distributed &mdash;
+        some jobs face 50%+ displacement within five years, others face less than 1%.
+        This atlas shows the full landscape. The calculator tells you where <em>you</em> stand.
+      </p>
+      <div style="margin-top: 36px;">
+        <a href="/calculator" class="btn-primary">
+          Calculate your vulnerability
+          <span class="arrow">→</span>
+        </a>
+        <span class="mono" style="color: var(--bone-3); font-size: 0.78rem; letter-spacing: 0.1em; margin-left: 18px;">
+          90 seconds · free
+        </span>
+      </div>
+    </section>
+  </div>
+
+  <!-- Industry breakdown -->
+  <section style="padding: 60px 0 40px; border-top: 1px solid var(--rule);">
+    <div class="wrap">
+      <div class="eyebrow" style="margin-bottom: 18px;">/ 01 — INDUSTRY VULNERABILITY</div>
+      <h2 class="display" style="font-size: clamp(2rem, 4vw, 3.2rem); margin-bottom: 18px;">
+        Where the heat lands.
+      </h2>
+      <p style="color: var(--bone-2); max-width: 60ch; margin-bottom: 36px; font-size: 1.05rem; line-height: 1.55;">
+        Percentage of workers in each US industry projected to face AI displacement within 2–5 years.
+      </p>
+
+      <div style="display: grid; gap: 8px;">
+        {% for industry, pct in industry_baselines.items() %}
+        <div style="display: grid; grid-template-columns: 240px 1fr 70px; gap: 16px; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--rule);">
+          <div style="font-family: 'Fraunces', serif; font-size: 1.05rem;">{{ industry }}</div>
+          <div style="background: rgba(244,236,216,0.05); height: 22px; position: relative; overflow: hidden;">
+            <div style="position: absolute; left: 0; top: 0; bottom: 0; width: {{ (pct / 20 * 100) }}%;
+              background: linear-gradient(90deg,
+                {% if pct >= 15 %}var(--h5){% elif pct >= 8 %}var(--h4){% elif pct >= 5 %}var(--h3){% elif pct >= 3 %}var(--h2){% else %}var(--h1){% endif %},
+                {% if pct >= 15 %}var(--h6){% elif pct >= 8 %}var(--h5){% elif pct >= 5 %}var(--h4){% elif pct >= 3 %}var(--h3){% else %}var(--h2){% endif %}
+              );"></div>
+          </div>
+          <div class="mono" style="text-align: right; font-size: 0.95rem; color: var(--bone-2);">{{ pct }}%</div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  <!-- Top/Bottom 10 -->
+  <section style="padding: 40px 0 60px;">
+    <div class="wrap">
+      <div class="eyebrow" style="margin-bottom: 18px;">/ 02 — THE OCCUPATIONS</div>
+      <h2 class="display" style="font-size: clamp(2rem, 4vw, 3.2rem); margin-bottom: 36px;">
+        Most exposed &amp; least exposed.
+      </h2>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px;">
+        <div>
+          <div class="eyebrow" style="color: var(--signal); margin-bottom: 16px;">▲ MOST AT RISK</div>
+          {% for o in occupations[:10] %}
+          <div style="display: grid; grid-template-columns: 28px 1fr 60px; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--rule); align-items: center;">
+            <span class="mono" style="font-size: 0.78rem; color: var(--bone-4);">{{ '%02d' % loop.index }}</span>
+            <span style="font-family: 'Fraunces', serif; font-size: 1rem;">{{ o.title }}</span>
+            <span class="mono" style="text-align: right; color: var(--signal); font-weight: 700;">{{ o.job_loss_pct }}%</span>
+          </div>
+          {% endfor %}
+        </div>
+        <div>
+          <div class="eyebrow" style="color: var(--h1); margin-bottom: 16px;">▼ LEAST AT RISK</div>
+          {% for o in occupations[-10:]|reverse %}
+          <div style="display: grid; grid-template-columns: 28px 1fr 60px; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--rule); align-items: center;">
+            <span class="mono" style="font-size: 0.78rem; color: var(--bone-4);">{{ '%02d' % loop.index }}</span>
+            <span style="font-family: 'Fraunces', serif; font-size: 1rem;">{{ o.title }}</span>
+            <span class="mono" style="text-align: right; color: var(--h1); font-weight: 700;">{{ o.job_loss_pct }}%</span>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Banner -->
+  <section class="cta-banner">
+    <div class="wrap">
+      <div class="cta-text">
+        Don't see your job? <em>Calculate yours.</em><br>
+        <span style="font-size: 0.7em; color: var(--bone-3); font-style: normal;">
+          104 occupations · 50 states · 5-year trajectory
+        </span>
+      </div>
+      <a href="/calculator" class="btn-primary">
+        Get my score
+        <span class="arrow">→</span>
+      </a>
+    </div>
+  </section>
+
+  <!-- Methodology footer -->
+  <section style="padding: 60px 0 80px;">
+    <div class="wrap">
+      <div class="eyebrow" style="margin-bottom: 14px;">/ METHODOLOGY &amp; SOURCES</div>
+      <p style="color: var(--bone-3); font-size: 0.88rem; line-height: 1.6; max-width: 65ch;">
+        Vulnerability percentages from Tufts University Digital Planet
+        <i>American AI Jobs Risk Index</i> (Mar 2026), combining theoretical AI exposure
+        (Eloundou et al. 2023) with real-world AI usage data from the Anthropic Economic
+        Index and Microsoft Copilot study (Tomlinson et al. 2025). State percentages reflect
+        industry composition. Trajectory curves are logistic adoption models calibrated to
+        McKinsey's 2030–2060 half-saturation band. Scenarios, not forecasts.
+      </p>
+    </div>
+  </section>
+
+  <footer style="padding: 30px 0; border-top: 1px solid var(--rule);">
+    <div class="wrap" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+      <div class="mono" style="font-size: 0.72rem; color: var(--bone-4); letter-spacing: 0.1em;">
+        THE GREAT REPLACEMENT · ATLAS v1.0 · MAY 2026
+      </div>
+      <a href="/calculator" class="nav-link">Calculate your score →</a>
+    </div>
+  </footer>
+</div>
+{% endblock %}

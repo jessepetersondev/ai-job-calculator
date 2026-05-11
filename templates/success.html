@@ -1,0 +1,39 @@
+{% extends "_base.html" %}
+
+{% block title %}Report on the way — The Great Replacement{% endblock %}
+
+{% block content %}
+<div class="calc-page">
+  <div class="wrap">
+    <nav class="nav">
+      <a href="/" class="brand"><span class="dot"></span> THE GREAT REPLACEMENT</a>
+    </nav>
+
+    <div class="message-page">
+      <div class="message-card">
+        <div class="eyebrow" style="margin-bottom: 22px; color: var(--signal);">/ PAYMENT CONFIRMED</div>
+        <h1>Your report is <em>on the way.</em></h1>
+        <p>
+          Check your inbox in the next 60 seconds. The PDF will arrive from
+          <span class="mono">reports@</span> &mdash; if you don't see it, check your spam folder
+          and mark it "not spam" so future correspondence reaches you.
+        </p>
+        <p style="margin-top: 18px;">
+          The report includes your 5-year vulnerability trajectory, the specific tasks AI is
+          replacing in your role, three adjacent safer roles, a list of recommended skills with
+          courses, and a 90-day pivot plan you can start Monday.
+        </p>
+        {% if session_id %}
+        <p style="font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: var(--bone-4); margin-top: 30px; letter-spacing: 0.08em;">
+          ORDER · {{ session_id[:20] }}…
+        </p>
+        {% endif %}
+        <a href="/" class="btn-primary" style="margin-top: 30px;">
+          Back to the atlas
+          <span class="arrow">→</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

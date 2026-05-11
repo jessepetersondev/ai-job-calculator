@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+.env
+data/pending.json
+data/sent_reports/
+data/test-report.pdf
+.venv/
+venv/
+.DS_Store

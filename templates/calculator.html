@@ -1,0 +1,182 @@
+{% extends "_base.html" %}
+
+{% block title %}Calculate Your AI Vulnerability — The Great Replacement{% endblock %}
+
+{% block content %}
+<div class="calc-page">
+  <div class="wrap">
+    <nav class="nav">
+      <a href="/" class="brand"><span class="dot"></span> THE GREAT REPLACEMENT</a>
+      <a href="/" class="nav-link">← Atlas</a>
+    </nav>
+
+    <!-- ============ INPUT STAGE ============ -->
+    <section id="stage-input" class="calc-hero">
+      <div class="eyebrow" style="margin-bottom: 24px;">/ PERSONALIZED VULNERABILITY CALCULATOR</div>
+      <h1>
+        Find out how much<br>
+        of your job <em>survives AI.</em>
+      </h1>
+      <p class="lede" style="margin-top: 24px;">
+        Two questions. A score grounded in Tufts University's analysis of every US occupation.
+        A free summary in 5 seconds. A full personalized report for ${{ "%.0f"|format(price_dollars) }}.
+      </p>
+
+      <form id="calc-form" class="calc-form" autocomplete="off" onsubmit="return false;">
+        <div class="error" id="calc-error"></div>
+
+        <div class="field">
+          <label for="occupation-input">Your job title</label>
+          <input
+            id="occupation-input"
+            type="text"
+            placeholder="e.g. software engineer, nurse, accountant…"
+            autocomplete="off"
+            autocapitalize="off"
+            spellcheck="false"
+          />
+          <div class="autocomplete" id="autocomplete-list"></div>
+        </div>
+
+        <div class="field">
+          <label for="state-input">Your state</label>
+          <select id="state-input">
+            <option value="">Select a state…</option>
+            {% for code, s in states.items() %}
+            <option value="{{ code }}">{{ s.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <button type="button" id="calc-submit" class="btn-primary">
+          <span class="btn-label">Show my score</span>
+          <span class="arrow">→</span>
+        </button>
+        <div class="mono" style="font-size: 0.7rem; color: var(--bone-4); letter-spacing: 0.1em; margin-top: 12px;">
+          FREE · NO SIGN-UP · NO TRACKING
+        </div>
+      </form>
+    </section>
+
+    <!-- ============ RESULT STAGE ============ -->
+    <section id="stage-result" style="display: none; padding: 20px 0 80px;">
+      <div class="scorecard">
+        <span class="badge" id="r-badge">— —</span>
+        <div class="occ-name" id="r-occ">—</div>
+        <div class="meta" id="r-meta">—</div>
+
+        <div class="score-row">
+          <div class="score-big" id="r-score">
+            <span id="r-score-num">0</span><span class="pct">%</span>
+          </div>
+          <div class="score-context">
+            <span class="rank">#<span id="r-rank">—</span></span>
+            <span class="rank-lbl">RANK OF <span id="r-total">—</span></span>
+          </div>
+        </div>
+
+        <p class="severity-msg" id="r-severity">—</p>
+
+        <!-- Sparkline -->
+        <div class="spark-wrap">
+          <div class="spark-label">FIVE-YEAR DISPLACEMENT TRAJECTORY · 2026–2031</div>
+          <svg id="r-spark" class="spark-svg" viewBox="0 0 800 180" preserveAspectRatio="none"></svg>
+        </div>
+
+        <!-- Locked previews -->
+        <div class="preview-grid">
+          <div class="preview-block">
+            <div class="pblabel">AT-RISK TASKS · PREVIEW</div>
+            <div class="pbhead">What AI is replacing in your role</div>
+            <ul class="pblist" id="r-tasks-preview">
+              <li>—</li>
+            </ul>
+          </div>
+
+          <div class="preview-block">
+            <div class="pblabel">SAFER ADJACENT ROLES · PREVIEW</div>
+            <div class="pbhead">Where to pivot, ranked by transferability</div>
+            <ul class="pblist" id="r-adj-preview">
+              <li>—</li>
+            </ul>
+          </div>
+
+          <div class="preview-block locked">
+            <div class="pblabel">SKILLS TO LEARN</div>
+            <div class="pbhead">Coursera-grade resources, ranked by ROI</div>
+            <ul class="pblist">
+              <li>Skill #1 — recommended course</li>
+              <li>Skill #2 — recommended course</li>
+              <li>Skill #3 — recommended course</li>
+              <li>Skill #4 — recommended course</li>
+            </ul>
+            <span class="locked-tag">🔒 IN FULL REPORT</span>
+          </div>
+
+          <div class="preview-block locked">
+            <div class="pblabel">90-DAY PIVOT PLAN</div>
+            <div class="pbhead">Week-by-week, what to do starting Monday</div>
+            <ul class="pblist">
+              <li>Days 1–14 — Audit current role…</li>
+              <li>Days 15–30 — Pick an adjacent role…</li>
+              <li>Days 31–60 — Skill investment…</li>
+              <li>Days 61–90 — Portfolio + applications…</li>
+            </ul>
+            <span class="locked-tag">🔒 IN FULL REPORT</span>
+          </div>
+        </div>
+
+        <!-- PAYWALL -->
+        <div class="paywall">
+          <div class="pw-eyebrow">/ UNLOCK THE FULL REPORT · ${{ "%.0f"|format(price_dollars) }}</div>
+          <h3>Get the <em>complete</em> 5-page report.</h3>
+          <p class="pw-body">
+            Your personalized score is the start. The full PDF gives you a 5-year displacement
+            curve specific to your role, the exact tasks AI is replacing in your job, three
+            adjacent safer roles ranked by transferable skill overlap, recommended courses,
+            and a 90-day pivot plan you can start Monday.
+          </p>
+
+          <ul class="pw-includes">
+            <li>5-year vulnerability trajectory</li>
+            <li>Task-level breakdown of what AI replaces</li>
+            <li>3 adjacent safer roles for you</li>
+            <li>Skills to learn with course links</li>
+            <li>90-day step-by-step pivot plan</li>
+            <li>Methodology &amp; sources</li>
+          </ul>
+
+          <div class="pw-form">
+            <input
+              id="pay-email"
+              type="email"
+              placeholder="Email for delivery (PDF arrives in 60 seconds)"
+              autocomplete="email"
+            />
+            <button id="pay-btn" class="btn-primary" type="button">
+              <span class="btn-label">Get my report · ${{ "%.0f"|format(price_dollars) }}</span>
+              <span class="arrow">→</span>
+            </button>
+          </div>
+          <p class="pw-fine">
+            ONE-TIME PAYMENT · INSTANT EMAIL DELIVERY · STRIPE-SECURED CHECKOUT<br>
+            7-day refund guarantee. No subscription. We don't sell or share your email.
+          </p>
+        </div>
+
+        <!-- Share -->
+        <div class="share-bar">
+          <span class="lbl">Share your score:</span>
+          <button class="share-btn" id="share-x">𝕏 Post</button>
+          <button class="share-btn" id="share-link">Copy link</button>
+          <button class="share-btn" id="recalc-btn">↻ Recalculate</button>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/calculator.js') }}"></script>
+{% endblock %}

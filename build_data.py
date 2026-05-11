@@ -1,0 +1,1100 @@
+"""
+Occupations dataset for the AI Job Vulnerability Calculator.
+Curated from Tufts University Digital Planet "American AI Jobs Risk Index" (March 2026),
+the Anthropic Economic Index (2025), Goldman Sachs research, McKinsey Global Institute,
+Brookings, and BLS Standard Occupational Classification (SOC).
+
+For each occupation:
+  job_loss_pct: projected near-term (2-5 yr) job displacement risk %
+  exposure: 0-100 AI task-exposure score (Eloundou et al. methodology)
+  augmentation: 0-100 share of tasks AI can augment
+  category: high-level industry bucket
+  physicality: 0-1, share of work that is physical (lowers displacement)
+  adjacent_safer: list of safer adjacent roles
+  at_risk_tasks: tasks AI is replacing in this role
+  skills_to_learn: skills to add to stay competitive
+
+Run this file to regenerate /data/occupations.json
+"""
+
+import json
+from pathlib import Path
+
+# ============================================================
+# OCCUPATIONS — ~150 common US job titles with vulnerability data
+# ============================================================
+
+OCCUPATIONS = [
+    # ─── HIGH-RISK KNOWLEDGE WORK (40-60% displacement) ───────
+    {
+        "title": "Writer / Author",
+        "aliases": ["writer", "author", "content writer", "freelance writer", "novelist", "blogger"],
+        "job_loss_pct": 57, "exposure": 88, "augmentation": 82, "physicality": 0.0,
+        "category": "Information",
+        "adjacent_safer": ["Editorial Strategist", "Investigative Journalist", "Book Editor (acquisitions)"],
+        "at_risk_tasks": ["Drafting articles", "Editing for grammar", "Producing short-form copy", "Summarizing research"],
+        "skills_to_learn": ["AI-assisted editing", "Source verification", "Editorial taste/curation", "Long-form investigation"]
+    },
+    {
+        "title": "Computer Programmer",
+        "aliases": ["programmer", "coder", "junior developer", "junior software engineer"],
+        "job_loss_pct": 55, "exposure": 97, "augmentation": 90, "physicality": 0.0,
+        "category": "Information",
+        "adjacent_safer": ["Software Architect", "DevOps Engineer", "AI/ML Engineer"],
+        "at_risk_tasks": ["Writing routine code", "Bug fixing", "Refactoring", "Writing unit tests"],
+        "skills_to_learn": ["System architecture", "AI agent design", "Distributed systems", "Production debugging"]
+    },
+    {
+        "title": "Web Designer",
+        "aliases": ["web designer", "ui designer", "interface designer", "digital designer"],
+        "job_loss_pct": 55, "exposure": 100, "augmentation": 88, "physicality": 0.0,
+        "category": "Information",
+        "adjacent_safer": ["UX Researcher", "Design Systems Lead", "Brand Strategist"],
+        "at_risk_tasks": ["Mockup generation", "Layout design", "Component design", "Style variations"],
+        "skills_to_learn": ["User research", "Accessibility (WCAG)", "Brand strategy", "Design systems at scale"]
+    },
+    {
+        "title": "Customer Service Representative",
+        "aliases": ["customer service", "csr", "call center agent", "support agent", "help desk"],
+        "job_loss_pct": 52, "exposure": 78, "augmentation": 65, "physicality": 0.0,
+        "category": "Administrative",
+        "adjacent_safer": ["Customer Success Manager", "Account Manager", "Community Manager"],
+        "at_risk_tasks": ["Answering FAQs", "Ticket triage", "Order status lookups", "Returns processing"],
+        "skills_to_learn": ["Complex escalation handling", "Customer success strategy", "Account expansion", "Voice-of-customer research"]
+    },
+    {
+        "title": "Data Entry Clerk",
+        "aliases": ["data entry", "data clerk", "typist", "document processor"],
+        "job_loss_pct": 51, "exposure": 95, "augmentation": 30, "physicality": 0.0,
+        "category": "Administrative",
+        "adjacent_safer": ["Data Quality Analyst", "Database Administrator", "Operations Coordinator"],
+        "at_risk_tasks": ["Form entry", "Document digitization", "Data transcription", "List management"],
+        "skills_to_learn": ["SQL & databases", "Data validation/QA", "Spreadsheet automation", "Process design"]
+    },
+    {
+        "title": "Market Research Analyst",
+        "aliases": ["market researcher", "research analyst", "marketing analyst", "consumer insights"],
+        "job_loss_pct": 48, "exposure": 86, "augmentation": 78, "physicality": 0.0,
+        "category": "Professional Services",
+        "adjacent_safer": ["Strategy Consultant", "VP of Insights", "Brand Director"],
+        "at_risk_tasks": ["Survey analysis", "Competitor research", "Report drafting", "Data visualization"],
+        "skills_to_learn": ["Qualitative research", "Stakeholder strategy", "Causal inference", "Decision frameworks"]
+    },
+    {
+        "title": "Legal Assistant / Paralegal",
+        "aliases": ["paralegal", "legal assistant", "legal secretary", "law clerk"],
+        "job_loss_pct": 46, "exposure": 82, "augmentation": 75, "physicality": 0.0,
+        "category": "Professional Services",
+        "adjacent_safer": ["Compliance Officer", "Litigation Project Manager", "Legal Operations Lead"],
+        "at_risk_tasks": ["Document review", "Legal research", "Drafting routine filings", "Discovery review"],
+        "skills_to_learn": ["E-discovery tooling", "Legal operations", "Contract negotiation", "Compliance strategy"]
+    },
+    {
+        "title": "Accountant / Auditor",
+        "aliases": ["accountant", "auditor", "cpa", "bookkeeper", "tax preparer"],
+        "job_loss_pct": 42, "exposure": 85, "augmentation": 80, "physicality": 0.0,
+        "category": "Finance",
+        "adjacent_safer": ["Forensic Accountant", "CFO / Controller", "Tax Strategist"],
+        "at_risk_tasks": ["Bookkeeping entries", "Tax form preparation", "Reconciliation", "Routine audits"],
+        "skills_to_learn": ["Forensic accounting", "Financial strategy", "M&A due diligence", "Treasury management"]
+    },
+    {
+        "title": "Software QA Tester",
+        "aliases": ["qa tester", "quality assurance", "test engineer", "software tester"],
+        "job_loss_pct": 40, "exposure": 92, "augmentation": 70, "physicality": 0.0,
+        "category": "Information",
+        "adjacent_safer": ["SDET", "Test Automation Architect", "Site Reliability Engineer"],
+        "at_risk_tasks": ["Writing test cases", "Regression testing", "Bug reproduction", "Manual UI testing"],
+        "skills_to_learn": ["Test automation frameworks", "Performance testing", "Chaos engineering", "Security testing"]
+    },
+    {
+        "title": "Journalist / Reporter",
+        "aliases": ["journalist", "reporter", "news writer", "correspondent", "news analyst"],
+        "job_loss_pct": 38, "exposure": 92, "augmentation": 75, "physicality": 0.05,
+        "category": "Information",
+        "adjacent_safer": ["Investigative Reporter", "Editor-in-Chief", "Communications Director"],
+        "at_risk_tasks": ["Press release rewrites", "Earnings coverage", "Routine reporting", "Wire-service writing"],
+        "skills_to_learn": ["Investigative methods", "Source development", "Data journalism", "Long-form narrative"]
+    },
+    {
+        "title": "Bookkeeper",
+        "aliases": ["bookkeeper", "accounting clerk"],
+        "job_loss_pct": 50, "exposure": 88, "augmentation": 70, "physicality": 0.0,
+        "category": "Finance",
+        "adjacent_safer": ["Senior Accountant", "Financial Analyst", "Controller"],
+        "at_risk_tasks": ["Daily ledger entries", "Bank reconciliation", "AR/AP processing", "Routine reporting"],
+        "skills_to_learn": ["Financial analysis", "FP&A", "ERP administration", "Audit preparation"]
+    },
+    {
+        "title": "Administrative Assistant",
+        "aliases": ["admin assistant", "executive assistant", "secretary", "office administrator", "office assistant"],
+        "job_loss_pct": 44, "exposure": 80, "augmentation": 72, "physicality": 0.05,
+        "category": "Administrative",
+        "adjacent_safer": ["Chief of Staff", "Operations Manager", "Executive Operations Lead"],
+        "at_risk_tasks": ["Scheduling", "Email triage", "Document formatting", "Meeting notes"],
+        "skills_to_learn": ["Project management", "Operations strategy", "Stakeholder management", "Vendor management"]
+    },
+    {
+        "title": "Telemarketer",
+        "aliases": ["telemarketer", "outbound caller", "phone sales"],
+        "job_loss_pct": 60, "exposure": 86, "augmentation": 50, "physicality": 0.0,
+        "category": "Sales",
+        "adjacent_safer": ["Account Executive", "Sales Engineer", "Customer Success Manager"],
+        "at_risk_tasks": ["Cold calling scripts", "Lead qualification", "Appointment setting", "Survey calls"],
+        "skills_to_learn": ["Complex B2B sales", "Solution selling", "Account management", "Negotiation"]
+    },
+    {
+        "title": "Proofreader / Copy Editor",
+        "aliases": ["proofreader", "copy editor", "copyeditor", "editor"],
+        "job_loss_pct": 54, "exposure": 90, "augmentation": 80, "physicality": 0.0,
+        "category": "Information",
+        "adjacent_safer": ["Managing Editor", "Editorial Director", "Content Strategist"],
+        "at_risk_tasks": ["Grammar/spell checking", "Style guide enforcement", "Light copy editing", "Fact-checking surface claims"],
+        "skills_to_learn": ["Developmental editing", "Editorial strategy", "Author coaching", "Brand voice"]
+    },
+    {
+        "title": "Translator",
+        "aliases": ["translator", "interpreter", "linguist"],
+        "job_loss_pct": 49, "exposure": 88, "augmentation": 70, "physicality": 0.05,
+        "category": "Information",
+        "adjacent_safer": ["Localization Manager", "Court Interpreter", "Diplomatic Interpreter"],
+        "at_risk_tasks": ["Routine translation", "Subtitle translation", "Email translation", "Document translation"],
+        "skills_to_learn": ["Localization strategy", "Cultural consulting", "Specialized legal/medical interpretation", "Live diplomatic interpretation"]
+    },
+    {
+        "title": "Graphic Designer",
+        "aliases": ["graphic designer", "visual designer", "production designer"],
+        "job_loss_pct": 45, "exposure": 78, "augmentation": 85, "physicality": 0.05,
+        "category": "Information",
+        "adjacent_safer": ["Creative Director", "Brand Designer", "Design Manager"],
+        "at_risk_tasks": ["Social media graphics", "Layout production", "Asset variations", "Stock-image compositing"],
+        "skills_to_learn": ["Brand strategy", "Creative direction", "Motion design", "Design systems"]
+    },
+    {
+        "title": "Financial Analyst",
+        "aliases": ["financial analyst", "investment analyst", "credit analyst", "fp&a"],
+        "job_loss_pct": 44, "exposure": 89, "augmentation": 82, "physicality": 0.0,
+        "category": "Finance",
+        "adjacent_safer": ["Portfolio Manager", "Strategic Finance Lead", "Investment Banker (MD level)"],
+        "at_risk_tasks": ["Building models", "Financial reports", "Variance analysis", "Industry benchmarking"],
+        "skills_to_learn": ["Capital allocation strategy", "Deal structuring", "Investor relations", "Strategic finance"]
+    },
+    {
+        "title": "Receptionist",
+        "aliases": ["receptionist", "front desk", "information clerk"],
+        "job_loss_pct": 41, "exposure": 65, "augmentation": 55, "physicality": 0.15,
+        "category": "Administrative",
+        "adjacent_safer": ["Office Manager", "Hospitality Coordinator", "Concierge"],
+        "at_risk_tasks": ["Call routing", "Appointment scheduling", "Visitor check-in", "Basic inquiries"],
+        "skills_to_learn": ["Office management", "Vendor coordination", "Event coordination", "Concierge services"]
+    },
+    {
+        "title": "Insurance Underwriter",
+        "aliases": ["underwriter", "insurance analyst"],
+        "job_loss_pct": 47, "exposure": 84, "augmentation": 78, "physicality": 0.0,
+        "category": "Finance",
+        "adjacent_safer": ["Risk Manager", "Actuarial Consultant", "Underwriting Director"],
+        "at_risk_tasks": ["Standard risk assessment", "Policy pricing", "Application review", "Routine claims review"],
+        "skills_to_learn": ["Complex risk modeling", "Reinsurance", "Regulatory strategy", "Specialty underwriting"]
+    },
+    {
+        "title": "Loan Officer",
+        "aliases": ["loan officer", "mortgage officer", "loan processor"],
+        "job_loss_pct": 38, "exposure": 75, "augmentation": 70, "physicality": 0.0,
+        "category": "Finance",
+        "adjacent_safer": ["Commercial Banker", "Wealth Advisor", "Loan Operations Manager"],
+        "at_risk_tasks": ["Loan applications processing", "Credit checks", "Documentation review", "Standard approvals"],
+        "skills_to_learn": ["Commercial lending", "Wealth management", "Banking strategy", "Client relationship management"]
+    },
+    {
+        "title": "Data Scientist",
+        "aliases": ["data scientist", "ml engineer", "data analyst (senior)"],
+        "job_loss_pct": 28, "exposure": 97, "augmentation": 92, "physicality": 0.0,
+        "category": "Information",
+        "adjacent_safer": ["AI Research Engineer", "Head of Data", "ML Infrastructure Lead"],
+        "at_risk_tasks": ["Exploratory analysis", "Standard model training", "Dashboard creation", "Routine A/B test analysis"],
+        "skills_to_learn": ["Causal inference", "MLOps & production ML", "AI alignment research", "Domain specialization"]
+    },
+    {
+        "title": "Software Engineer / Developer",
+        "aliases": ["software engineer", "software developer", "full stack developer", "backend developer", "frontend developer"],
+        "job_loss_pct": 25, "exposure": 90, "augmentation": 90, "physicality": 0.0,
+        "category": "Information",
+        "adjacent_safer": ["Engineering Manager", "Principal Engineer", "Solutions Architect"],
+        "at_risk_tasks": ["Boilerplate generation", "CRUD endpoints", "Test scaffolding", "Documentation"],
+        "skills_to_learn": ["System design", "AI/agent orchestration", "Distributed systems", "Engineering leadership"]
+    },
+    {
+        "title": "UX Researcher",
+        "aliases": ["ux researcher", "user researcher", "design researcher"],
+        "job_loss_pct": 22, "exposure": 70, "augmentation": 80, "physicality": 0.05,
+        "category": "Information",
+        "adjacent_safer": ["Research Lead", "Design Director", "Product Strategy Lead"],
+        "at_risk_tasks": ["Survey analysis", "Interview transcription", "Synthesis writeups", "Persona drafting"],
+        "skills_to_learn": ["Mixed-methods research", "Strategic research programs", "Stakeholder management", "Research operations"]
+    },
+    {
+        "title": "Marketing Manager",
+        "aliases": ["marketing manager", "marketing director", "growth marketer"],
+        "job_loss_pct": 18, "exposure": 75, "augmentation": 85, "physicality": 0.05,
+        "category": "Professional Services",
+        "adjacent_safer": ["Head of Brand", "CMO", "Growth Strategy Lead"],
+        "at_risk_tasks": ["Content production", "Campaign drafts", "Reporting", "Email sequences"],
+        "skills_to_learn": ["Brand strategy", "Customer research", "Lifecycle strategy", "Marketing analytics"]
+    },
+    {
+        "title": "Public Relations Specialist",
+        "aliases": ["pr specialist", "public relations", "communications manager", "communications specialist"],
+        "job_loss_pct": 36, "exposure": 88, "augmentation": 78, "physicality": 0.05,
+        "category": "Professional Services",
+        "adjacent_safer": ["Head of Communications", "Crisis Communications Director", "Investor Relations Lead"],
+        "at_risk_tasks": ["Press release drafting", "Media list building", "Standard pitches", "Media monitoring"],
+        "skills_to_learn": ["Crisis management", "Executive communications", "Investor relations", "Strategic narrative"]
+    },
+    {
+        "title": "Recruiter / HR Coordinator",
+        "aliases": ["recruiter", "hr coordinator", "talent acquisition", "headhunter"],
+        "job_loss_pct": 35, "exposure": 78, "augmentation": 72, "physicality": 0.0,
+        "category": "Administrative",
+        "adjacent_safer": ["Head of Talent", "Executive Recruiter", "People Operations Lead"],
+        "at_risk_tasks": ["Resume screening", "Initial outreach", "Scheduling interviews", "Sourcing"],
+        "skills_to_learn": ["Executive search", "Talent strategy", "Compensation strategy", "People operations"]
+    },
+    {
+        "title": "Real Estate Agent",
+        "aliases": ["real estate agent", "realtor", "real estate broker"],
+        "job_loss_pct": 16, "exposure": 60, "augmentation": 65, "physicality": 0.25,
+        "category": "Real Estate",
+        "adjacent_safer": ["Commercial Broker", "Real Estate Investor", "Property Manager"],
+        "at_risk_tasks": ["Listing descriptions", "Market reports", "Routine paperwork", "Pricing comps"],
+        "skills_to_learn": ["Negotiation mastery", "Commercial real estate", "Investment analysis", "Client relationship building"]
+    },
+
+    # ─── MEDIUM-RISK SUPPORT/COORDINATION (15-35%) ─────────────
+    {
+        "title": "Project Manager",
+        "aliases": ["project manager", "pm", "program manager", "project coordinator"],
+        "job_loss_pct": 26, "exposure": 78, "augmentation": 85, "physicality": 0.0,
+        "category": "Professional Services",
+        "adjacent_safer": ["VP Operations", "Head of PMO", "Chief of Staff"],
+        "at_risk_tasks": ["Status reports", "Schedule updates", "Risk logs", "Routine standups"],
+        "skills_to_learn": ["Stakeholder negotiation", "Strategic planning", "Org design", "Executive communication"]
+    },
+    {
+        "title": "Business Analyst",
+        "aliases": ["business analyst", "ba", "systems analyst"],
+        "job_loss_pct": 32, "exposure": 85, "augmentation": 82, "physicality": 0.0,
+        "category": "Professional Services",
+        "adjacent_safer": ["Strategy Lead", "Product Manager", "Operations Director"],
+        "at_risk_tasks": ["Requirements writing", "Process documentation", "Reporting", "Standard data analysis"],
+        "skills_to_learn": ["Product strategy", "Business architecture", "Change management", "Executive influence"]
+    },
+    {
+        "title": "Product Manager",
+        "aliases": ["product manager", "pm", "product owner"],
+        "job_loss_pct": 18, "exposure": 72, "augmentation": 85, "physicality": 0.0,
+        "category": "Information",
+        "adjacent_safer": ["VP of Product", "Head of Strategy", "Founder/CEO"],
+        "at_risk_tasks": ["User story writing", "Spec drafts", "Roadmap updates", "Competitive research"],
+        "skills_to_learn": ["Product strategy", "Customer research depth", "Org leadership", "Pricing & monetization"]
+    },
+    {
+        "title": "Operations Manager",
+        "aliases": ["operations manager", "ops manager"],
+        "job_loss_pct": 15, "exposure": 65, "augmentation": 75, "physicality": 0.1,
+        "category": "Professional Services",
+        "adjacent_safer": ["COO", "VP Operations", "Supply Chain Director"],
+        "at_risk_tasks": ["Process documentation", "Scheduling", "Routine reporting", "Vendor coordination"],
+        "skills_to_learn": ["Strategic operations", "Supply chain mastery", "Org design", "M&A integration"]
+    },
+    {
+        "title": "Sales Representative",
+        "aliases": ["sales rep", "salesperson", "account executive", "ae", "inside sales"],
+        "job_loss_pct": 22, "exposure": 70, "augmentation": 80, "physicality": 0.1,
+        "category": "Sales",
+        "adjacent_safer": ["VP Sales", "Sales Engineer", "Account Director (enterprise)"],
+        "at_risk_tasks": ["Outreach drafting", "Lead research", "Proposal writing", "CRM updates"],
+        "skills_to_learn": ["Complex deal structuring", "Executive selling", "Account expansion", "Sales leadership"]
+    },
+    {
+        "title": "Teacher (K-12)",
+        "aliases": ["teacher", "elementary teacher", "high school teacher", "k-12 teacher"],
+        "job_loss_pct": 8, "exposure": 60, "augmentation": 78, "physicality": 0.2,
+        "category": "Education",
+        "adjacent_safer": ["School Counselor", "Special Education Teacher", "Principal/Administrator"],
+        "at_risk_tasks": ["Lesson plan drafting", "Grading", "Routine assessments", "Parent emails"],
+        "skills_to_learn": ["Differentiated instruction", "Trauma-informed teaching", "Special ed specialization", "School leadership"]
+    },
+    {
+        "title": "College Professor",
+        "aliases": ["professor", "college professor", "university professor", "adjunct professor", "lecturer"],
+        "job_loss_pct": 14, "exposure": 75, "augmentation": 85, "physicality": 0.05,
+        "category": "Education",
+        "adjacent_safer": ["Department Chair", "Dean", "Research Director"],
+        "at_risk_tasks": ["Routine lecture prep", "Grading", "Course material creation", "Standard research synthesis"],
+        "skills_to_learn": ["Original research", "Graduate mentoring", "University administration", "Industry consulting"]
+    },
+    {
+        "title": "Civil Engineer",
+        "aliases": ["civil engineer", "structural engineer"],
+        "job_loss_pct": 10, "exposure": 58, "augmentation": 70, "physicality": 0.2,
+        "category": "Professional Services",
+        "adjacent_safer": ["Project Engineering Manager", "Construction Manager", "Engineering Consultant"],
+        "at_risk_tasks": ["Routine drafting", "Standard calculations", "Code compliance checks", "Report drafting"],
+        "skills_to_learn": ["Project leadership", "Construction management", "PE license expertise", "Sustainability engineering"]
+    },
+    {
+        "title": "Mechanical Engineer",
+        "aliases": ["mechanical engineer", "design engineer"],
+        "job_loss_pct": 12, "exposure": 60, "augmentation": 75, "physicality": 0.2,
+        "category": "Manufacturing",
+        "adjacent_safer": ["Engineering Manager", "Manufacturing Director", "R&D Lead"],
+        "at_risk_tasks": ["CAD drafting", "FEA analysis", "Routine spec writing", "BOM creation"],
+        "skills_to_learn": ["Systems engineering", "R&D leadership", "Robotics integration", "Manufacturing strategy"]
+    },
+    {
+        "title": "Electrical Engineer",
+        "aliases": ["electrical engineer", "ee", "hardware engineer"],
+        "job_loss_pct": 13, "exposure": 65, "augmentation": 78, "physicality": 0.15,
+        "category": "Manufacturing",
+        "adjacent_safer": ["Hardware Architect", "Engineering Director", "Semiconductor Specialist"],
+        "at_risk_tasks": ["Schematic generation", "Routine PCB layout", "Signal analysis", "Testing protocols"],
+        "skills_to_learn": ["RF/analog mastery", "Hardware architecture", "Semiconductor design", "Engineering leadership"]
+    },
+
+    # ─── LOW-RISK / HEALTHCARE & SKILLED WORK (3-15%) ──────────
+    {
+        "title": "Registered Nurse",
+        "aliases": ["nurse", "rn", "registered nurse"],
+        "job_loss_pct": 4, "exposure": 35, "augmentation": 50, "physicality": 0.6,
+        "category": "Healthcare",
+        "adjacent_safer": ["Nurse Practitioner", "Nurse Manager", "Clinical Nurse Specialist"],
+        "at_risk_tasks": ["Charting / documentation", "Medication reconciliation lookup", "Shift handoff notes"],
+        "skills_to_learn": ["Advanced practice (NP)", "Specialty certification (ICU, ER)", "Nurse leadership", "Informatics"]
+    },
+    {
+        "title": "Doctor / Physician",
+        "aliases": ["doctor", "physician", "md", "general practitioner"],
+        "job_loss_pct": 6, "exposure": 60, "augmentation": 80, "physicality": 0.3,
+        "category": "Healthcare",
+        "adjacent_safer": ["Surgical Specialist", "Department Head", "Medical Director"],
+        "at_risk_tasks": ["Documentation", "Routine diagnostic synthesis", "Standard treatment recommendations"],
+        "skills_to_learn": ["Procedural specialties", "Medical leadership", "Health systems strategy", "Research leadership"]
+    },
+    {
+        "title": "Surgeon",
+        "aliases": ["surgeon", "surgical specialist"],
+        "job_loss_pct": 2, "exposure": 22, "augmentation": 45, "physicality": 0.7,
+        "category": "Healthcare",
+        "adjacent_safer": ["Chief of Surgery", "Surgical Subspecialist", "Robotic Surgery Lead"],
+        "at_risk_tasks": ["Pre-op documentation", "Standard imaging review"],
+        "skills_to_learn": ["Robotic surgery", "Rare procedure mastery", "Surgical leadership", "Medical device innovation"]
+    },
+    {
+        "title": "Dentist",
+        "aliases": ["dentist", "dds", "dmd"],
+        "job_loss_pct": 4, "exposure": 30, "augmentation": 55, "physicality": 0.65,
+        "category": "Healthcare",
+        "adjacent_safer": ["Oral Surgeon", "Orthodontist", "Practice Owner"],
+        "at_risk_tasks": ["Routine X-ray review", "Treatment plan documentation"],
+        "skills_to_learn": ["Specialty (oral surgery, ortho)", "Practice management", "Cosmetic dentistry", "Implantology"]
+    },
+    {
+        "title": "Physical Therapist",
+        "aliases": ["physical therapist", "pt", "physiotherapist"],
+        "job_loss_pct": 3, "exposure": 30, "augmentation": 55, "physicality": 0.65,
+        "category": "Healthcare",
+        "adjacent_safer": ["Clinical Director", "Sports Medicine Specialist", "Practice Owner"],
+        "at_risk_tasks": ["Documentation", "Standard exercise plan creation"],
+        "skills_to_learn": ["Sports specialty", "Manual therapy mastery", "Practice ownership", "Geriatric specialty"]
+    },
+    {
+        "title": "Veterinarian",
+        "aliases": ["veterinarian", "vet", "animal doctor"],
+        "job_loss_pct": 5, "exposure": 40, "augmentation": 60, "physicality": 0.55,
+        "category": "Healthcare",
+        "adjacent_safer": ["Veterinary Surgeon", "Veterinary Specialist (cardio, onco)", "Practice Owner"],
+        "at_risk_tasks": ["Documentation", "Routine diagnostic interpretation"],
+        "skills_to_learn": ["Specialty certification", "Exotic animal medicine", "Practice ownership", "Surgical specialization"]
+    },
+    {
+        "title": "Therapist / Counselor",
+        "aliases": ["therapist", "counselor", "psychologist", "social worker", "mental health counselor"],
+        "job_loss_pct": 7, "exposure": 55, "augmentation": 70, "physicality": 0.1,
+        "category": "Healthcare",
+        "adjacent_safer": ["Clinical Director", "Specialty Therapist (trauma, etc.)", "Private Practice Owner"],
+        "at_risk_tasks": ["Session notes", "Standard intake assessments", "Routine treatment plans"],
+        "skills_to_learn": ["Specialized modalities (EMDR, IFS)", "Group therapy expertise", "Crisis intervention", "Practice management"]
+    },
+    {
+        "title": "Pharmacist",
+        "aliases": ["pharmacist", "rph"],
+        "job_loss_pct": 12, "exposure": 65, "augmentation": 78, "physicality": 0.3,
+        "category": "Healthcare",
+        "adjacent_safer": ["Clinical Pharmacist", "Pharmacy Manager", "Pharmaceutical Consultant"],
+        "at_risk_tasks": ["Routine dispensing", "Standard insurance lookups", "Drug interaction checks"],
+        "skills_to_learn": ["Clinical specialization", "Pharmacy management", "Medication therapy management", "Compounding"]
+    },
+    {
+        "title": "Electrician",
+        "aliases": ["electrician", "electrical contractor"],
+        "job_loss_pct": 2, "exposure": 25, "augmentation": 45, "physicality": 0.75,
+        "category": "Construction",
+        "adjacent_safer": ["Master Electrician", "Electrical Contractor (owner)", "Industrial Electrician"],
+        "at_risk_tasks": ["Estimating routine jobs", "Code compliance lookups"],
+        "skills_to_learn": ["Industrial / commercial specialty", "Solar/EV charging install", "Business ownership", "Electrical engineering certifications"]
+    },
+    {
+        "title": "Plumber",
+        "aliases": ["plumber", "pipefitter"],
+        "job_loss_pct": 2, "exposure": 22, "augmentation": 40, "physicality": 0.8,
+        "category": "Construction",
+        "adjacent_safer": ["Master Plumber", "Plumbing Contractor (owner)", "Hydronic Systems Specialist"],
+        "at_risk_tasks": ["Estimating", "Permit paperwork"],
+        "skills_to_learn": ["Commercial systems", "Hydronics", "Backflow certification", "Business ownership"]
+    },
+    {
+        "title": "HVAC Technician",
+        "aliases": ["hvac technician", "hvac", "ac repair", "heating and cooling"],
+        "job_loss_pct": 3, "exposure": 28, "augmentation": 50, "physicality": 0.75,
+        "category": "Construction",
+        "adjacent_safer": ["HVAC Contractor (owner)", "Commercial HVAC Specialist", "Refrigeration Specialist"],
+        "at_risk_tasks": ["Diagnostic codes lookup", "Service ticket documentation"],
+        "skills_to_learn": ["Commercial HVAC", "Heat pump specialization", "Building automation systems", "Business ownership"]
+    },
+    {
+        "title": "Carpenter",
+        "aliases": ["carpenter", "framer", "finish carpenter"],
+        "job_loss_pct": 3, "exposure": 25, "augmentation": 40, "physicality": 0.85,
+        "category": "Construction",
+        "adjacent_safer": ["General Contractor", "Custom Cabinet Maker", "Construction Supervisor"],
+        "at_risk_tasks": ["Material take-offs", "Routine estimating"],
+        "skills_to_learn": ["General contracting license", "Custom/luxury work", "Historic restoration", "Business ownership"]
+    },
+    {
+        "title": "Welder",
+        "aliases": ["welder", "fabricator"],
+        "job_loss_pct": 2, "exposure": 14, "augmentation": 35, "physicality": 0.85,
+        "category": "Manufacturing",
+        "adjacent_safer": ["Welding Inspector", "Underwater Welder", "Welding Engineer"],
+        "at_risk_tasks": ["Routine documentation"],
+        "skills_to_learn": ["Certified welding inspector", "Specialty welding (pipe, underwater)", "Welding engineering", "Robotics integration"]
+    },
+    {
+        "title": "Auto Mechanic",
+        "aliases": ["mechanic", "auto mechanic", "automotive technician"],
+        "job_loss_pct": 4, "exposure": 35, "augmentation": 55, "physicality": 0.75,
+        "category": "Other Services",
+        "adjacent_safer": ["Master Tech (specialty)", "Shop Owner", "EV/Hybrid Specialist"],
+        "at_risk_tasks": ["Diagnostic code interpretation", "Service writing"],
+        "skills_to_learn": ["EV/hybrid certification", "Diesel specialty", "Performance/tuning", "Shop ownership"]
+    },
+    {
+        "title": "Construction Worker",
+        "aliases": ["construction worker", "laborer", "construction laborer"],
+        "job_loss_pct": 4, "exposure": 22, "augmentation": 35, "physicality": 0.9,
+        "category": "Construction",
+        "adjacent_safer": ["Foreman", "Skilled Trade Apprenticeship", "Site Supervisor"],
+        "at_risk_tasks": ["Material logging"],
+        "skills_to_learn": ["Skilled trade apprenticeship", "Heavy equipment operation", "Site supervision", "Construction management certification"]
+    },
+
+    # ─── LOW-RISK SERVICE & PHYSICAL WORK (1-8%) ───────────────
+    {
+        "title": "Police Officer",
+        "aliases": ["police officer", "cop", "law enforcement"],
+        "job_loss_pct": 5, "exposure": 35, "augmentation": 55, "physicality": 0.6,
+        "category": "Government",
+        "adjacent_safer": ["Detective", "Sergeant", "Specialized Unit (SWAT, K9)"],
+        "at_risk_tasks": ["Routine report writing", "Records lookups"],
+        "skills_to_learn": ["Investigation specialties", "Crisis negotiation", "Cybercrime", "Leadership/command"]
+    },
+    {
+        "title": "Firefighter",
+        "aliases": ["firefighter", "fireman"],
+        "job_loss_pct": 2, "exposure": 18, "augmentation": 35, "physicality": 0.85,
+        "category": "Government",
+        "adjacent_safer": ["Fire Captain", "Fire Inspector", "Paramedic Specialty"],
+        "at_risk_tasks": ["Routine documentation"],
+        "skills_to_learn": ["Paramedic certification", "Fire investigation", "Hazmat specialty", "Command structure leadership"]
+    },
+    {
+        "title": "Truck Driver",
+        "aliases": ["truck driver", "trucker", "cdl driver", "long haul driver"],
+        "job_loss_pct": 8, "exposure": 30, "augmentation": 40, "physicality": 0.5,
+        "category": "Transportation",
+        "adjacent_safer": ["Owner-Operator", "Specialty Hauler (hazmat, heavy)", "Fleet Manager"],
+        "at_risk_tasks": ["Route optimization", "Log/HOS documentation"],
+        "skills_to_learn": ["Specialty hauling certifications", "Owner-operator business skills", "Fleet management", "Logistics coordination"]
+    },
+    {
+        "title": "Delivery Driver",
+        "aliases": ["delivery driver", "courier", "package delivery"],
+        "job_loss_pct": 12, "exposure": 35, "augmentation": 45, "physicality": 0.7,
+        "category": "Transportation",
+        "adjacent_safer": ["Route Supervisor", "Logistics Coordinator", "Fleet Manager"],
+        "at_risk_tasks": ["Route planning", "Delivery confirmation"],
+        "skills_to_learn": ["Logistics coordination", "Fleet management", "Supervisor training", "Cross-docking expertise"]
+    },
+    {
+        "title": "Uber / Lyft Driver",
+        "aliases": ["rideshare driver", "uber driver", "lyft driver", "taxi driver"],
+        "job_loss_pct": 18, "exposure": 30, "augmentation": 35, "physicality": 0.5,
+        "category": "Transportation",
+        "adjacent_safer": ["Limo/Black Car Service", "Tour Guide Driver", "Fleet Owner"],
+        "at_risk_tasks": ["Navigation", "Fare estimation"],
+        "skills_to_learn": ["Black car / executive transport", "Tour guiding", "Vehicle fleet ownership", "Specialty transport"]
+    },
+    {
+        "title": "Chef / Cook",
+        "aliases": ["chef", "cook", "line cook", "sous chef"],
+        "job_loss_pct": 2, "exposure": 25, "augmentation": 50, "physicality": 0.8,
+        "category": "Accommodation",
+        "adjacent_safer": ["Executive Chef", "Restaurant Owner", "Culinary Director"],
+        "at_risk_tasks": ["Menu cost analysis", "Recipe scaling"],
+        "skills_to_learn": ["Restaurant management", "Culinary specialty (pastry, etc.)", "Restaurant ownership", "Catering business"]
+    },
+    {
+        "title": "Server / Waiter",
+        "aliases": ["server", "waiter", "waitress", "bartender"],
+        "job_loss_pct": 3, "exposure": 28, "augmentation": 40, "physicality": 0.6,
+        "category": "Accommodation",
+        "adjacent_safer": ["Restaurant Manager", "Sommelier", "Bar Manager"],
+        "at_risk_tasks": ["Order taking (some POS systems)"],
+        "skills_to_learn": ["Sommelier / mixology certification", "Restaurant management", "Hospitality leadership", "Fine dining specialty"]
+    },
+    {
+        "title": "Fast Food Worker",
+        "aliases": ["fast food", "fast food worker", "counter worker", "barista"],
+        "job_loss_pct": 2, "exposure": 14, "augmentation": 30, "physicality": 0.6,
+        "category": "Accommodation",
+        "adjacent_safer": ["Shift Manager", "Franchise Manager", "Store Manager"],
+        "at_risk_tasks": ["Order entry (some kiosks)"],
+        "skills_to_learn": ["Shift management", "Franchise ownership pathways", "Hospitality operations", "Customer service leadership"]
+    },
+    {
+        "title": "Retail Salesperson / Cashier",
+        "aliases": ["retail", "cashier", "retail associate", "sales associate"],
+        "job_loss_pct": 14, "exposure": 38, "augmentation": 50, "physicality": 0.5,
+        "category": "Retail",
+        "adjacent_safer": ["Store Manager", "Visual Merchandiser", "Buyer"],
+        "at_risk_tasks": ["Checkout (self-checkout)", "Inventory lookup"],
+        "skills_to_learn": ["Store management", "Visual merchandising", "Buying/merchandising career path", "Loss prevention specialty"]
+    },
+    {
+        "title": "Janitor / Custodian",
+        "aliases": ["janitor", "custodian", "cleaner", "housekeeper"],
+        "job_loss_pct": 1, "exposure": 12, "augmentation": 25, "physicality": 0.9,
+        "category": "Other Services",
+        "adjacent_safer": ["Facilities Manager", "Cleaning Business Owner", "Building Engineer"],
+        "at_risk_tasks": ["Supply ordering"],
+        "skills_to_learn": ["Facilities management certification", "Cleaning business ownership", "Building engineering", "Sanitation specialty"]
+    },
+    {
+        "title": "Landscaper / Groundskeeper",
+        "aliases": ["landscaper", "groundskeeper", "lawn care", "gardener"],
+        "job_loss_pct": 2, "exposure": 18, "augmentation": 35, "physicality": 0.9,
+        "category": "Other Services",
+        "adjacent_safer": ["Landscape Designer", "Arborist", "Business Owner"],
+        "at_risk_tasks": ["Routine scheduling"],
+        "skills_to_learn": ["Landscape design", "Arborist certification", "Business ownership", "Irrigation systems specialty"]
+    },
+    {
+        "title": "Nursing Assistant / CNA",
+        "aliases": ["cna", "nursing assistant", "nurse aide", "home health aide"],
+        "job_loss_pct": 1, "exposure": 18, "augmentation": 30, "physicality": 0.85,
+        "category": "Healthcare",
+        "adjacent_safer": ["LPN", "RN (with education)", "Patient Care Coordinator"],
+        "at_risk_tasks": ["Documentation"],
+        "skills_to_learn": ["LPN / RN program", "Specialty certification (geriatrics)", "Hospice care specialty", "Care coordination"]
+    },
+    {
+        "title": "Massage Therapist",
+        "aliases": ["massage therapist", "lmt"],
+        "job_loss_pct": 1, "exposure": 12, "augmentation": 25, "physicality": 0.85,
+        "category": "Other Services",
+        "adjacent_safer": ["Specialty Therapist (sports, medical)", "Spa Owner", "Physical Therapy Assistant"],
+        "at_risk_tasks": ["Appointment scheduling"],
+        "skills_to_learn": ["Medical massage specialty", "Sports therapy", "Spa business ownership", "Pain management specialty"]
+    },
+    {
+        "title": "Personal Trainer",
+        "aliases": ["personal trainer", "fitness trainer", "fitness coach"],
+        "job_loss_pct": 5, "exposure": 45, "augmentation": 65, "physicality": 0.5,
+        "category": "Other Services",
+        "adjacent_safer": ["Strength Coach (athletic)", "Gym Owner", "Physical Therapist (with degree)"],
+        "at_risk_tasks": ["Standard workout plans", "Routine progress tracking"],
+        "skills_to_learn": ["Athletic strength specialty", "Nutrition certification", "Gym ownership", "Rehabilitation specialty"]
+    },
+    {
+        "title": "Hair Stylist / Barber",
+        "aliases": ["hair stylist", "barber", "hairdresser", "cosmetologist"],
+        "job_loss_pct": 2, "exposure": 18, "augmentation": 30, "physicality": 0.7,
+        "category": "Other Services",
+        "adjacent_safer": ["Salon Owner", "Specialty (extensions, color)", "Beauty Educator"],
+        "at_risk_tasks": ["Appointment booking"],
+        "skills_to_learn": ["Salon ownership", "Specialty technique mastery", "Beauty education", "Cosmetics product line"]
+    },
+    {
+        "title": "Childcare Worker",
+        "aliases": ["childcare", "daycare worker", "preschool teacher", "nanny"],
+        "job_loss_pct": 3, "exposure": 25, "augmentation": 40, "physicality": 0.6,
+        "category": "Education",
+        "adjacent_safer": ["Early Childhood Educator (degree)", "Daycare Owner", "Special Needs Educator"],
+        "at_risk_tasks": ["Routine parent communication", "Activity planning"],
+        "skills_to_learn": ["Early childhood education degree", "Special needs specialization", "Daycare ownership", "Child development specialty"]
+    },
+    {
+        "title": "Social Worker",
+        "aliases": ["social worker", "case worker"],
+        "job_loss_pct": 9, "exposure": 60, "augmentation": 72, "physicality": 0.15,
+        "category": "Healthcare",
+        "adjacent_safer": ["Clinical Social Worker (LCSW)", "Program Director", "Policy Advocate"],
+        "at_risk_tasks": ["Case documentation", "Routine assessments"],
+        "skills_to_learn": ["Clinical license (LCSW)", "Crisis intervention", "Policy/advocacy work", "Program management"]
+    },
+    {
+        "title": "Pilot / Aircraft Operator",
+        "aliases": ["pilot", "airline pilot", "commercial pilot"],
+        "job_loss_pct": 4, "exposure": 25, "augmentation": 60, "physicality": 0.5,
+        "category": "Transportation",
+        "adjacent_safer": ["Captain (senior)", "Check Airman / Instructor", "Specialty Aviation (medical, etc.)"],
+        "at_risk_tasks": ["Standard flight planning", "Routine paperwork"],
+        "skills_to_learn": ["Captain upgrade", "Flight instructor certification", "Specialty aviation (cargo, medical)", "Aviation management"]
+    },
+    {
+        "title": "Lawyer / Attorney",
+        "aliases": ["lawyer", "attorney", "esquire"],
+        "job_loss_pct": 15, "exposure": 78, "augmentation": 88, "physicality": 0.05,
+        "category": "Professional Services",
+        "adjacent_safer": ["Trial Lawyer", "Partner (firm)", "In-house General Counsel"],
+        "at_risk_tasks": ["Contract review", "Legal research", "Standard brief drafting", "Discovery review"],
+        "skills_to_learn": ["Trial advocacy", "M&A / specialized practice", "Business development", "Partner-track skills"]
+    },
+    {
+        "title": "Judge",
+        "aliases": ["judge", "magistrate"],
+        "job_loss_pct": 2, "exposure": 50, "augmentation": 65, "physicality": 0.0,
+        "category": "Government",
+        "adjacent_safer": ["Appellate Judge", "Federal Judge", "Arbitrator/Mediator"],
+        "at_risk_tasks": ["Routine motion research"],
+        "skills_to_learn": ["Appellate practice", "Specialty courts", "Arbitration/mediation", "Judicial leadership"]
+    },
+    {
+        "title": "CEO / Executive",
+        "aliases": ["ceo", "executive", "president", "chief executive"],
+        "job_loss_pct": 3, "exposure": 50, "augmentation": 78, "physicality": 0.0,
+        "category": "Professional Services",
+        "adjacent_safer": ["Board Member", "Founder/Investor", "Industry Council Member"],
+        "at_risk_tasks": ["Memo drafting", "Board prep materials", "Standard analysis review"],
+        "skills_to_learn": ["Board governance", "Capital strategy", "Founder/investor skills", "Industry leadership"]
+    },
+    {
+        "title": "Farmer / Agricultural Worker",
+        "aliases": ["farmer", "agricultural worker", "rancher"],
+        "job_loss_pct": 1, "exposure": 22, "augmentation": 40, "physicality": 0.85,
+        "category": "Agriculture",
+        "adjacent_safer": ["Farm Owner-Operator", "Agricultural Consultant", "Ag-Tech Specialist"],
+        "at_risk_tasks": ["Routine record keeping"],
+        "skills_to_learn": ["Ag-tech / precision agriculture", "Direct-to-consumer farm business", "Specialty crops", "Agricultural consulting"]
+    },
+    {
+        "title": "Architect",
+        "aliases": ["architect"],
+        "job_loss_pct": 24, "exposure": 75, "augmentation": 85, "physicality": 0.1,
+        "category": "Professional Services",
+        "adjacent_safer": ["Principal Architect", "Firm Owner", "Specialty Designer (sustainable, etc.)"],
+        "at_risk_tasks": ["Standard drafting", "Routine renderings", "Code compliance checks"],
+        "skills_to_learn": ["Firm ownership", "Sustainable design specialty", "Historic preservation", "Master planning"]
+    },
+    {
+        "title": "Photographer",
+        "aliases": ["photographer", "wedding photographer", "portrait photographer"],
+        "job_loss_pct": 28, "exposure": 65, "augmentation": 75, "physicality": 0.4,
+        "category": "Information",
+        "adjacent_safer": ["Wedding/Event Photographer", "Photojournalist", "Studio Owner"],
+        "at_risk_tasks": ["Stock photography", "Routine editing", "Standard portrait work"],
+        "skills_to_learn": ["Live event specialty", "Photojournalism", "Studio ownership", "Specialty (aerial, scientific)"]
+    },
+    {
+        "title": "Video Editor",
+        "aliases": ["video editor", "film editor", "post production"],
+        "job_loss_pct": 36, "exposure": 80, "augmentation": 85, "physicality": 0.05,
+        "category": "Information",
+        "adjacent_safer": ["Director", "Post-Production Supervisor", "Specialty Editor (documentary, etc.)"],
+        "at_risk_tasks": ["Rough cuts", "Routine color grading", "Captions/subtitles", "Social-cut variants"],
+        "skills_to_learn": ["Directing", "Documentary specialty", "Color grading mastery", "Post supervision"]
+    },
+    {
+        "title": "Stock Trader / Financial Advisor",
+        "aliases": ["financial advisor", "stock trader", "broker", "wealth manager"],
+        "job_loss_pct": 22, "exposure": 78, "augmentation": 80, "physicality": 0.0,
+        "category": "Finance",
+        "adjacent_safer": ["Portfolio Manager (HNW)", "Hedge Fund Partner", "RIA Owner"],
+        "at_risk_tasks": ["Routine portfolio rebalancing", "Standard research", "Quant screening"],
+        "skills_to_learn": ["HNW relationship management", "Alternative investments", "RIA business ownership", "Specialty (estate, tax)"]
+    },
+    {
+        "title": "Insurance Agent",
+        "aliases": ["insurance agent", "insurance broker"],
+        "job_loss_pct": 26, "exposure": 70, "augmentation": 72, "physicality": 0.05,
+        "category": "Finance",
+        "adjacent_safer": ["Specialty Broker (commercial)", "Agency Owner", "Risk Consultant"],
+        "at_risk_tasks": ["Quote generation", "Standard policy comparison", "Routine renewals"],
+        "skills_to_learn": ["Commercial / specialty lines", "Agency ownership", "Risk consulting", "Producer leadership"]
+    },
+    {
+        "title": "Librarian",
+        "aliases": ["librarian", "archivist"],
+        "job_loss_pct": 18, "exposure": 70, "augmentation": 70, "physicality": 0.1,
+        "category": "Education",
+        "adjacent_safer": ["Library Director", "Archivist (specialized)", "Information Architect"],
+        "at_risk_tasks": ["Reference questions", "Cataloging"],
+        "skills_to_learn": ["Library leadership", "Digital archives", "Information architecture", "Special collections"]
+    },
+    {
+        "title": "Historian / Researcher",
+        "aliases": ["historian", "researcher", "academic researcher"],
+        "job_loss_pct": 40, "exposure": 85, "augmentation": 92, "physicality": 0.0,
+        "category": "Education",
+        "adjacent_safer": ["Museum Curator", "Archival Director", "Tenured Professor"],
+        "at_risk_tasks": ["Synthesis of secondary sources", "Routine document analysis"],
+        "skills_to_learn": ["Primary source field work", "Curation", "Public history specialty", "Documentary production"]
+    },
+    {
+        "title": "Tax Preparer",
+        "aliases": ["tax preparer", "tax accountant"],
+        "job_loss_pct": 52, "exposure": 90, "augmentation": 78, "physicality": 0.0,
+        "category": "Finance",
+        "adjacent_safer": ["CPA / Tax Strategist", "Forensic Accountant", "Tax Attorney"],
+        "at_risk_tasks": ["Standard return preparation", "Form 1040s", "Routine deductions analysis"],
+        "skills_to_learn": ["Complex/HNW tax strategy", "International tax", "Tax law (JD)", "Forensic specialty"]
+    },
+    {
+        "title": "Court Reporter",
+        "aliases": ["court reporter", "stenographer"],
+        "job_loss_pct": 55, "exposure": 96, "augmentation": 60, "physicality": 0.0,
+        "category": "Government",
+        "adjacent_safer": ["Legal Videographer", "CART/Caption Provider (live)", "Litigation Support Specialist"],
+        "at_risk_tasks": ["Standard transcription", "Routine deposition recording"],
+        "skills_to_learn": ["CART / live captioning specialty", "Legal videography", "Litigation support tech", "Specialty venues (federal court)"]
+    },
+    {
+        "title": "Medical Coder / Records Specialist",
+        "aliases": ["medical coder", "medical records", "health information"],
+        "job_loss_pct": 53, "exposure": 94, "augmentation": 65, "physicality": 0.0,
+        "category": "Healthcare",
+        "adjacent_safer": ["Coding Auditor", "Compliance Officer", "Health Informatics Specialist"],
+        "at_risk_tasks": ["Routine coding", "Standard chart review"],
+        "skills_to_learn": ["Coding audit/compliance", "Health informatics", "Clinical documentation improvement", "Specialty coding (oncology, surgery)"]
+    },
+    {
+        "title": "Cybersecurity Analyst",
+        "aliases": ["cybersecurity", "security analyst", "infosec", "information security"],
+        "job_loss_pct": 14, "exposure": 96, "augmentation": 92, "physicality": 0.0,
+        "category": "Information",
+        "adjacent_safer": ["Security Architect", "CISO", "Penetration Tester (red team)"],
+        "at_risk_tasks": ["Alert triage", "Routine log analysis", "Standard vulnerability scans"],
+        "skills_to_learn": ["Security architecture", "Red team / pentesting", "AI security specialty", "Compliance/governance (CISO track)"]
+    },
+    {
+        "title": "Network Administrator",
+        "aliases": ["network administrator", "sysadmin", "system administrator", "it administrator"],
+        "job_loss_pct": 22, "exposure": 87, "augmentation": 82, "physicality": 0.1,
+        "category": "Information",
+        "adjacent_safer": ["Network Architect", "DevOps / SRE", "Cloud Solutions Architect"],
+        "at_risk_tasks": ["Routine config", "Standard monitoring", "User provisioning", "Patch management"],
+        "skills_to_learn": ["Cloud architecture (AWS/GCP/Azure)", "SRE/DevOps", "Network architecture", "Zero-trust security"]
+    },
+    {
+        "title": "Help Desk Technician",
+        "aliases": ["help desk", "it support", "tech support"],
+        "job_loss_pct": 42, "exposure": 80, "augmentation": 65, "physicality": 0.15,
+        "category": "Information",
+        "adjacent_safer": ["IT Manager", "Sysadmin", "Field Engineer"],
+        "at_risk_tasks": ["Password resets", "Tier 1 ticket triage", "Standard troubleshooting"],
+        "skills_to_learn": ["Sysadmin certifications (RHCE)", "Cloud/SRE skills", "IT management", "Network engineering"]
+    },
+    {
+        "title": "Government Clerk / Civil Servant",
+        "aliases": ["government clerk", "civil servant", "municipal clerk", "city clerk"],
+        "job_loss_pct": 36, "exposure": 78, "augmentation": 68, "physicality": 0.05,
+        "category": "Government",
+        "adjacent_safer": ["Department Director", "Policy Analyst", "City Manager"],
+        "at_risk_tasks": ["Permit processing", "Routine licensing", "Form processing"],
+        "skills_to_learn": ["Policy analysis", "Public administration (MPA)", "Municipal leadership", "Specialty regulation"]
+    },
+    {
+        "title": "Postal Worker",
+        "aliases": ["postal worker", "mail carrier", "postal service"],
+        "job_loss_pct": 6, "exposure": 25, "augmentation": 35, "physicality": 0.7,
+        "category": "Government",
+        "adjacent_safer": ["Postal Inspector", "Logistics Supervisor", "Operations Manager"],
+        "at_risk_tasks": ["Sortation (some automation already)"],
+        "skills_to_learn": ["Postal inspector qualification", "Logistics operations", "Operations management", "Supervisor track"]
+    },
+    {
+        "title": "Veterinary Technician",
+        "aliases": ["vet tech", "veterinary technician"],
+        "job_loss_pct": 3, "exposure": 30, "augmentation": 50, "physicality": 0.8,
+        "category": "Healthcare",
+        "adjacent_safer": ["Veterinary Specialty Tech", "Practice Manager", "Veterinarian (DVM)"],
+        "at_risk_tasks": ["Standard documentation"],
+        "skills_to_learn": ["Specialty certification (anesthesia, dental)", "Practice management", "DVM degree pathway", "Emergency medicine specialty"]
+    },
+    {
+        "title": "EMT / Paramedic",
+        "aliases": ["emt", "paramedic", "ambulance"],
+        "job_loss_pct": 3, "exposure": 30, "augmentation": 55, "physicality": 0.85,
+        "category": "Healthcare",
+        "adjacent_safer": ["Critical Care Paramedic", "EMS Supervisor", "RN (with education)"],
+        "at_risk_tasks": ["Run reports", "Routine documentation"],
+        "skills_to_learn": ["Critical care paramedic certification", "Flight paramedic specialty", "EMS leadership", "RN program"]
+    },
+    {
+        "title": "Hotel / Hospitality Worker",
+        "aliases": ["hotel worker", "front desk hotel", "hospitality", "concierge"],
+        "job_loss_pct": 8, "exposure": 50, "augmentation": 55, "physicality": 0.4,
+        "category": "Accommodation",
+        "adjacent_safer": ["Hotel Manager", "Event Manager", "Hospitality Director"],
+        "at_risk_tasks": ["Reservation processing", "Routine check-in", "Standard inquiries"],
+        "skills_to_learn": ["Hotel management degree", "Event management", "Revenue management", "Luxury hospitality"]
+    },
+    {
+        "title": "Tour Guide / Travel Agent",
+        "aliases": ["tour guide", "travel agent"],
+        "job_loss_pct": 32, "exposure": 75, "augmentation": 70, "physicality": 0.35,
+        "category": "Accommodation",
+        "adjacent_safer": ["Luxury Travel Concierge", "Tour Operator (owner)", "Destination Specialist"],
+        "at_risk_tasks": ["Itinerary planning", "Routine booking", "Standard recommendations"],
+        "skills_to_learn": ["Luxury / specialty travel", "Tour operator ownership", "Destination expertise", "Niche tour types (adventure, culinary)"]
+    },
+    {
+        "title": "Event Planner",
+        "aliases": ["event planner", "wedding planner", "event coordinator"],
+        "job_loss_pct": 17, "exposure": 65, "augmentation": 70, "physicality": 0.3,
+        "category": "Professional Services",
+        "adjacent_safer": ["Director of Events", "Wedding/Luxury Specialist", "Corporate Events Director"],
+        "at_risk_tasks": ["Routine RSVP management", "Vendor research", "Standard schedules"],
+        "skills_to_learn": ["Luxury wedding specialty", "Corporate event leadership", "Destination events", "Event production"]
+    },
+    {
+        "title": "Actuary",
+        "aliases": ["actuary"],
+        "job_loss_pct": 16, "exposure": 80, "augmentation": 85, "physicality": 0.0,
+        "category": "Finance",
+        "adjacent_safer": ["Chief Actuary", "Risk Consultant", "Actuarial Specialty (life/P&C/health)"],
+        "at_risk_tasks": ["Standard pricing models", "Routine reserving analysis"],
+        "skills_to_learn": ["Senior actuary credentials (FSA, FCAS)", "Risk consulting", "Predictive modeling specialty", "Chief Risk Officer track"]
+    },
+    {
+        "title": "Optometrist",
+        "aliases": ["optometrist", "eye doctor"],
+        "job_loss_pct": 6, "exposure": 38, "augmentation": 65, "physicality": 0.4,
+        "category": "Healthcare",
+        "adjacent_safer": ["Ophthalmologist (with MD)", "Practice Owner", "Vision Therapy Specialist"],
+        "at_risk_tasks": ["Routine eye exams", "Standard prescription updates"],
+        "skills_to_learn": ["Practice ownership", "Specialty (pediatric, sports vision)", "Vision therapy specialty", "Ophthalmology pathway"]
+    },
+    {
+        "title": "Dental Hygienist",
+        "aliases": ["dental hygienist"],
+        "job_loss_pct": 4, "exposure": 30, "augmentation": 50, "physicality": 0.75,
+        "category": "Healthcare",
+        "adjacent_safer": ["Dental Office Manager", "Specialty Hygienist (periodontal)", "Dental Educator"],
+        "at_risk_tasks": ["Routine documentation"],
+        "skills_to_learn": ["Practice management", "Specialty (periodontal, pedo)", "Dental education", "Local anesthesia certification"]
+    },
+    {
+        "title": "Speech-Language Pathologist",
+        "aliases": ["speech pathologist", "speech therapist", "slp"],
+        "job_loss_pct": 7, "exposure": 50, "augmentation": 65, "physicality": 0.25,
+        "category": "Healthcare",
+        "adjacent_safer": ["Clinical Specialist (autism, etc.)", "Practice Owner", "School District Lead"],
+        "at_risk_tasks": ["Documentation", "Standard assessment scoring"],
+        "skills_to_learn": ["Specialty certification (autism, dysphagia)", "Practice ownership", "AAC technology specialty", "Bilingual SLP"]
+    },
+    {
+        "title": "Occupational Therapist",
+        "aliases": ["occupational therapist", "ot"],
+        "job_loss_pct": 4, "exposure": 35, "augmentation": 60, "physicality": 0.55,
+        "category": "Healthcare",
+        "adjacent_safer": ["Hand Therapy Specialist", "Clinical Director", "Practice Owner"],
+        "at_risk_tasks": ["Routine documentation", "Standard care plan templates"],
+        "skills_to_learn": ["Hand therapy specialty", "Pediatric OT specialty", "Clinical leadership", "Practice ownership"]
+    },
+    {
+        "title": "Chiropractor",
+        "aliases": ["chiropractor"],
+        "job_loss_pct": 5, "exposure": 35, "augmentation": 55, "physicality": 0.75,
+        "category": "Healthcare",
+        "adjacent_safer": ["Sports Chiropractor", "Practice Owner (multi-location)", "Functional Medicine Specialist"],
+        "at_risk_tasks": ["Routine intake forms"],
+        "skills_to_learn": ["Sports certification", "Functional medicine specialty", "Multi-location practice ownership", "Animal chiropractic specialty"]
+    },
+
+    # ─── EXECUTIVE/LEADERSHIP (low risk) ───────────────────────
+    {
+        "title": "Engineering Manager",
+        "aliases": ["engineering manager", "em", "eng manager"],
+        "job_loss_pct": 12, "exposure": 78, "augmentation": 88, "physicality": 0.0,
+        "category": "Information",
+        "adjacent_safer": ["Director of Engineering", "VP Engineering", "CTO"],
+        "at_risk_tasks": ["Standup notes", "Performance review drafts", "Roadmap updates"],
+        "skills_to_learn": ["Org design", "Strategic planning", "Executive communication", "Engineering at scale"]
+    },
+    {
+        "title": "Sales Manager",
+        "aliases": ["sales manager", "sales director"],
+        "job_loss_pct": 14, "exposure": 70, "augmentation": 82, "physicality": 0.05,
+        "category": "Sales",
+        "adjacent_safer": ["VP Sales", "Chief Revenue Officer", "Founder/CEO"],
+        "at_risk_tasks": ["Pipeline reports", "Forecasting", "Standard coaching templates"],
+        "skills_to_learn": ["Revenue strategy", "Channel/partner sales", "International expansion", "GTM strategy"]
+    },
+    {
+        "title": "Construction Manager",
+        "aliases": ["construction manager", "construction supervisor", "general contractor"],
+        "job_loss_pct": 5, "exposure": 40, "augmentation": 65, "physicality": 0.4,
+        "category": "Construction",
+        "adjacent_safer": ["Project Executive", "Construction Firm Owner", "Real Estate Developer"],
+        "at_risk_tasks": ["Routine scheduling", "Standard estimating"],
+        "skills_to_learn": ["Construction firm ownership", "Real estate development", "Specialty (commercial, healthcare)", "Project executive track"]
+    },
+    {
+        "title": "School Principal / Administrator",
+        "aliases": ["principal", "school administrator", "vice principal"],
+        "job_loss_pct": 4, "exposure": 60, "augmentation": 80, "physicality": 0.1,
+        "category": "Education",
+        "adjacent_safer": ["Superintendent", "District Curriculum Director", "Education Consultant"],
+        "at_risk_tasks": ["Routine communications", "Schedule management"],
+        "skills_to_learn": ["Superintendent credentials", "Education policy", "District leadership", "Curriculum innovation"]
+    }
+]
+
+# ============================================================
+# US STATES with AI vulnerability percentages
+# ============================================================
+STATES = {
+    "AL": {"name": "Alabama",        "p": 4.9},
+    "AK": {"name": "Alaska",         "p": 4.3},
+    "AZ": {"name": "Arizona",        "p": 5.8},
+    "AR": {"name": "Arkansas",       "p": 4.2},
+    "CA": {"name": "California",     "p": 6.6},
+    "CO": {"name": "Colorado",       "p": 6.8},
+    "CT": {"name": "Connecticut",    "p": 6.7},
+    "DE": {"name": "Delaware",       "p": 6.0},
+    "DC": {"name": "District of Columbia", "p": 11.3},
+    "FL": {"name": "Florida",        "p": 5.6},
+    "GA": {"name": "Georgia",        "p": 5.9},
+    "HI": {"name": "Hawaii",         "p": 5.2},
+    "ID": {"name": "Idaho",          "p": 4.7},
+    "IL": {"name": "Illinois",       "p": 6.2},
+    "IN": {"name": "Indiana",        "p": 5.0},
+    "IA": {"name": "Iowa",           "p": 4.8},
+    "KS": {"name": "Kansas",         "p": 5.2},
+    "KY": {"name": "Kentucky",       "p": 4.6},
+    "LA": {"name": "Louisiana",      "p": 3.8},
+    "ME": {"name": "Maine",          "p": 4.8},
+    "MD": {"name": "Maryland",       "p": 7.0},
+    "MA": {"name": "Massachusetts",  "p": 7.35},
+    "MI": {"name": "Michigan",       "p": 5.1},
+    "MN": {"name": "Minnesota",      "p": 6.1},
+    "MS": {"name": "Mississippi",    "p": 3.6},
+    "MO": {"name": "Missouri",       "p": 5.3},
+    "MT": {"name": "Montana",        "p": 4.2},
+    "NE": {"name": "Nebraska",       "p": 4.8},
+    "NV": {"name": "Nevada",         "p": 4.5},
+    "NH": {"name": "New Hampshire",  "p": 6.3},
+    "NJ": {"name": "New Jersey",     "p": 6.5},
+    "NM": {"name": "New Mexico",     "p": 5.0},
+    "NY": {"name": "New York",       "p": 6.7},
+    "NC": {"name": "North Carolina", "p": 5.8},
+    "ND": {"name": "North Dakota",   "p": 4.4},
+    "OH": {"name": "Ohio",           "p": 5.4},
+    "OK": {"name": "Oklahoma",       "p": 4.5},
+    "OR": {"name": "Oregon",         "p": 5.7},
+    "PA": {"name": "Pennsylvania",   "p": 5.7},
+    "RI": {"name": "Rhode Island",   "p": 5.5},
+    "SC": {"name": "South Carolina", "p": 4.7},
+    "SD": {"name": "South Dakota",   "p": 4.4},
+    "TN": {"name": "Tennessee",      "p": 4.9},
+    "TX": {"name": "Texas",          "p": 6.0},
+    "UT": {"name": "Utah",           "p": 5.9},
+    "VT": {"name": "Vermont",        "p": 5.5},
+    "VA": {"name": "Virginia",       "p": 7.2},
+    "WA": {"name": "Washington",     "p": 6.9},
+    "WV": {"name": "West Virginia",  "p": 4.0},
+    "WI": {"name": "Wisconsin",      "p": 5.3},
+    "WY": {"name": "Wyoming",        "p": 3.5}
+}
+
+# ============================================================
+# RECOMMENDED SKILLS with affiliate-ready course links
+# ============================================================
+SKILL_RESOURCES = {
+    "AI agent design":             {"course": "DeepLearning.AI: AI Agents in LangGraph", "url": "https://www.deeplearning.ai/short-courses/ai-agents-in-langgraph/"},
+    "System design":               {"course": "Educative: Grokking the System Design Interview", "url": "https://www.educative.io/courses/grokking-the-system-design-interview"},
+    "AI/ML production":            {"course": "Fast.ai: Practical Deep Learning", "url": "https://course.fast.ai/"},
+    "Cloud architecture":          {"course": "AWS Solutions Architect Associate", "url": "https://aws.amazon.com/certification/certified-solutions-architect-associate/"},
+    "Engineering leadership":      {"course": "Plato: Engineering Leadership Coaching", "url": "https://www.platohq.com/"},
+    "Product strategy":            {"course": "Reforge: Product Strategy", "url": "https://www.reforge.com/"},
+    "Investigative methods":       {"course": "Poynter Institute: Investigative Reporting", "url": "https://www.poynter.org/"},
+    "Brand strategy":              {"course": "Reforge: Brand Marketing", "url": "https://www.reforge.com/"},
+    "Capital allocation strategy": {"course": "Wharton: CFO Program", "url": "https://executiveeducation.wharton.upenn.edu/"},
+    "Strategic finance":           {"course": "CFA Institute Certification", "url": "https://www.cfainstitute.org/"},
+    "Negotiation mastery":         {"course": "Harvard PON: Negotiation Mastery", "url": "https://www.pon.harvard.edu/"},
+    "default":                     {"course": "Coursera: Career Pivot Specialization", "url": "https://www.coursera.org/"}
+}
+
+# ============================================================
+# BUILD JSON
+# ============================================================
+def build():
+    # Sort by job_loss_pct desc for ranking
+    sorted_occs = sorted(OCCUPATIONS, key=lambda o: -o["job_loss_pct"])
+    for i, occ in enumerate(sorted_occs):
+        occ["rank"] = i + 1
+        occ["total"] = len(sorted_occs)
+
+    data = {
+        "version": "1.0",
+        "updated": "2026-05-11",
+        "occupations": sorted_occs,
+        "states": STATES,
+        "industry_baselines": {
+            "Information":           18.3,
+            "Finance":               16.5,
+            "Professional Services": 15.6,
+            "Education":              8.3,
+            "Government":             7.8,
+            "Real Estate":            6.7,
+            "Administrative":         5.3,
+            "Other Services":         5.2,
+            "Sales":                  4.9,
+            "Manufacturing":          4.3,
+            "Retail":                 3.8,
+            "Healthcare":             3.6,
+            "Construction":           2.9,
+            "Transportation":         2.3,
+            "Agriculture":            1.1,
+            "Accommodation":          0.6
+        },
+        "skill_resources": SKILL_RESOURCES,
+        "national_average": 6.16
+    }
+
+    Path("data").mkdir(exist_ok=True)
+    with open("data/occupations.json", "w") as f:
+        json.dump(data, f, indent=2)
+
+    print(f"Wrote data/occupations.json with {len(sorted_occs)} occupations")
+    print(f"Top 5 by displacement:")
+    for o in sorted_occs[:5]:
+        print(f"  {o['rank']:>3}. {o['title']:<40} {o['job_loss_pct']}%")
+    print(f"Bottom 5:")
+    for o in sorted_occs[-5:]:
+        print(f"  {o['rank']:>3}. {o['title']:<40} {o['job_loss_pct']}%")
+
+if __name__ == "__main__":
+    build()
