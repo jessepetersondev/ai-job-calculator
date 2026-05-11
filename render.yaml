@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: ai-job-calculator
+    name: the-great-replacement
     runtime: python
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn app:app --bind 0.0.0.0:$PORT --workers 2
@@ -23,7 +23,7 @@ services:
       - key: REPORT_PRICE_CENTS
         value: "900"
       - key: APP_BASE_URL
-        sync: false
+        value: https://thegreatreplacement.fyi
       - key: RESEND_API_KEY
         sync: false
       - key: EMAIL_FROM
