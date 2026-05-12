@@ -349,6 +349,24 @@ def healthz():
     })
 
 
+# ─── SEO ────────────────────────────────────────────────────────
+@app.route("/robots.txt")
+def robots_txt():
+    resp = make_response("User-agent: *\nAllow: /\nSitemap: https://thegreatreplacement.fyi/sitemap.xml\n")
+    resp.headers["Content-Type"] = "text/plain"
+    return resp
+
+@app.route("/sitemap.xml")
+def sitemap_xml():
+    xml = """<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://thegreatreplacement.fyi/</loc><priority>1.0</priority></url>
+  <url><loc>https://thegreatreplacement.fyi/calculator</loc><priority>0.9</priority></url>
+</urlset>"""
+    resp = make_response(xml)
+    resp.headers["Content-Type"] = "application/xml"
+    return resp
+
 # ─── Stripe public key for the front end ────────────────────────
 @app.route("/config.js")
 def config_js():

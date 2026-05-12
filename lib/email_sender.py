@@ -53,6 +53,7 @@ def _send_via_resend(to, subject, html_body, text_body, pdf_bytes, pdf_name):
         },
         json={
             "from": EMAIL_FROM,
+            "reply_to": "support@thegreatreplacement.fyi",
             "to": [to],
             "subject": subject,
             "html": html_body,
@@ -136,7 +137,9 @@ def _email_html(occ_title, state_name, score_pct):
     <hr style="border:none;border-top:1px solid #2a2820;margin:24px 0;">
     <p style="font-family:Courier,monospace;font-size:10px;color:#8a8576;letter-spacing:1.5px;">
       THE GREAT REPLACEMENT &middot; ATLAS REPORT v1.0<br>
-      Data current as of March 2026 &middot; Tufts University Digital Planet
+      Data current as of March 2026 &middot; Tufts University Digital Planet<br><br>
+      This is a transactional email for a report you purchased at thegreatreplacement.fyi.<br>
+      Questions? Reply to this email or contact support@thegreatreplacement.fyi
     </p>
   </td></tr>
 </table>

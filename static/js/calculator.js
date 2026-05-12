@@ -358,7 +358,9 @@
     if (!currentResult) return;
     const pct = currentResult.vulnerability_pct;
     const occ = currentResult.occupation_title;
-    const text = `I scored ${pct}% AI-vulnerability as a ${occ}. Find yours →`;
+    const rank = currentResult.rank;
+    const total = currentResult.total;
+    const text = `My job (${occ}) has a ${pct}% AI displacement risk — ranked #${rank} most exposed of ${total} US occupations. What's yours?`;
     const url = config.baseUrl + "/calculator";
     window.open(
       `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`,
