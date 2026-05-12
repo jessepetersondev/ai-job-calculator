@@ -157,6 +157,7 @@
         return;
       }
       currentResult = data;
+      plausible('Score Generated', {props: {severity: data.severity}});
       renderResult(data);
     } catch (err) {
       showError("Network error — please try again.");
@@ -325,6 +326,7 @@
     label.innerHTML = '<span class="spinner"></span> Redirecting to Stripe';
     arrow.style.display = "none";
     payBtn.disabled = true;
+    plausible('Checkout Started', {props: {occupation: currentResult.occupation_title, severity: currentResult.severity}});
 
     try {
       const res = await fetch("/api/checkout", {
