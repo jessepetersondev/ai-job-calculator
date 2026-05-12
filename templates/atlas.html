@@ -1,7 +1,66 @@
 {% extends "_base.html" %}
 
 {% block title %}The Great Replacement — Will AI Take Your Job?{% endblock %}
-{% block description %}9.3 million US jobs are at risk in the next 2–5 years. Find out exactly how exposed yours is.{% endblock %}
+{% block description %}9.3 million US jobs are at risk in the next 2–5 years. Find out exactly how exposed yours is — free AI job displacement calculator grounded in Tufts University research.{% endblock %}
+{% block canonical %}https://thegreatreplacement.fyi{% endblock %}
+{% block structured_data %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Will AI take my job?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "It depends on your occupation. Tufts University research found that 9.3 million US jobs face significant AI displacement risk within 2–5 years, while others face less than 1% risk. Jobs with high routine cognitive tasks — data entry, paralegal work, bookkeeping, customer service — face the most exposure. Jobs requiring physical dexterity, complex judgment, or human relationships face less. Use the free calculator to find your specific score."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Which jobs are most at risk from AI?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "According to Tufts University's American AI Jobs Risk Index, the most at-risk occupations include Data Entry Clerks, Telemarketers, Bookkeeping Clerks, Paralegals, Customer Service Representatives, and Loan Officers. These roles have high AI exposure scores because most of their core tasks can be automated by current AI systems."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Which jobs are safest from AI replacement?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Jobs least at risk from AI include Plumbers, Electricians, Construction Workers, Surgeons, Mental Health Counselors, and Elementary School Teachers. These occupations require physical presence, fine motor skills, complex human judgment, or deep interpersonal trust that current AI systems cannot replicate."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How is AI job displacement risk calculated?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Our scores combine Tufts University's theoretical AI exposure index (based on Eloundou et al. 2023) with real-world AI adoption data from the Anthropic Economic Index and Microsoft Copilot research. State-level scores reflect local industry composition. Displacement trajectories use logistic adoption curves calibrated to McKinsey's 2030–2060 projections. These are scenarios grounded in research, not guarantees."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How soon will AI start replacing jobs?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Displacement is already underway in some sectors. Research suggests the most exposed occupations will see 20–50% role restructuring between 2026 and 2031, with a half-saturation point around 2028–2030 for high-exposure roles. Lower-exposure jobs face a longer runway. The free calculator shows a year-by-year 5-year trajectory for your specific occupation."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What should I do if my job has high AI displacement risk?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The $9 full report includes a personalized 90-day pivot plan, the three safest adjacent roles you can move into given your current skills, the specific tasks in your job AI is replacing first, and recommended courses ranked by return on investment. Early action — skill investment and role pivoting — dramatically improves outcomes for workers in high-risk occupations."
+      }
+    }
+  ]
+}
+</script>
+{% endblock %}
 
 {% block content %}
 <div class="calc-page">
@@ -125,6 +184,40 @@
         industry composition. Trajectory curves are logistic adoption models calibrated to
         McKinsey's 2030–2060 half-saturation band. Scenarios, not forecasts.
       </p>
+    </div>
+  </section>
+
+  <!-- FAQ Section -->
+  <section style="padding: 60px 0 40px; border-top: 1px solid var(--rule);">
+    <div class="wrap">
+      <div class="eyebrow" style="margin-bottom: 18px;">/ FREQUENTLY ASKED QUESTIONS</div>
+      <h2 class="display" style="font-size: clamp(2rem, 4vw, 3.2rem); margin-bottom: 40px;">
+        Will AI take your job?
+      </h2>
+      <div style="display: flex; flex-direction: column; gap: 0;">
+
+        {% set faqs = [
+          ("Will AI take my job?", "It depends on your occupation. Tufts University research found that 9.3 million US jobs face significant displacement risk within 2–5 years, while others face less than 1%. Jobs with high routine cognitive tasks — data entry, paralegal work, bookkeeping, customer service — face the most exposure. Use the free calculator above to find your specific score."),
+          ("Which jobs are most at risk from AI?", "The most at-risk occupations include Data Entry Clerks, Telemarketers, Bookkeeping Clerks, Paralegals, Customer Service Representatives, and Loan Officers. These roles have high exposure because most of their core tasks can be automated by current AI systems."),
+          ("Which jobs are safest from AI replacement?", "Jobs least at risk include Plumbers, Electricians, Construction Workers, Surgeons, Mental Health Counselors, and Elementary School Teachers. These require physical presence, fine motor skills, complex judgment, or interpersonal trust that current AI cannot replicate."),
+          ("How soon will AI start replacing jobs?", "Displacement is already underway in some sectors. High-exposure occupations will see 20–50% role restructuring between 2026 and 2031, with a half-saturation point around 2028–2030. The free calculator shows a year-by-year 5-year trajectory for your specific role."),
+          ("What should I do if my job has high AI risk?", "Early action dramatically improves outcomes. The $9 full report includes a personalized 90-day pivot plan, the three safest adjacent roles given your current skills, the specific tasks AI is replacing first, and recommended courses ranked by ROI.")
+        ] %}
+
+        {% for q, a in faqs %}
+        <div style="padding: 24px 0; border-bottom: 1px solid var(--rule);">
+          <h3 style="font-family: 'Fraunces', serif; font-weight: 400; font-size: 1.2rem; color: var(--bone); margin-bottom: 10px;">{{ q }}</h3>
+          <p style="color: var(--bone-3); font-size: 0.95rem; line-height: 1.65; max-width: 70ch;">{{ a }}</p>
+        </div>
+        {% endfor %}
+
+      </div>
+      <div style="margin-top: 36px;">
+        <a href="/calculator" class="btn-primary">
+          Find your score — free
+          <span class="arrow">→</span>
+        </a>
+      </div>
     </div>
   </section>
 
