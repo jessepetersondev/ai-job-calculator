@@ -124,6 +124,10 @@ def success_page():
 def cancel_page():
     return render_template("cancel.html")
 
+@app.route("/privacy")
+def privacy_page():
+    return render_template("privacy.html")
+
 
 # ============================================================
 # API
